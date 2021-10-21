@@ -47,9 +47,9 @@ namespace simplified_blockchain_VU
                 sum += useris.GetBalance();
             }
 
-            Console.WriteLine(sum);
-            Console.WriteLine(users[maxIndex].GetBalance());
-            Console.WriteLine(users[minIndex].GetBalance());
+            Console.WriteLine("Total: {0}", sum);
+            Console.WriteLine("Max: {0}", users[maxIndex].GetBalance());
+            Console.WriteLine("Min: {0}", users[minIndex].GetBalance());
             Console.WriteLine("Start mining.");
 
             while (transactions.Count > 0)
@@ -169,15 +169,16 @@ namespace simplified_blockchain_VU
                     minIndex = i;
                 }
             }
-            Console.WriteLine(users[maxIndex].GetBalance());
-            Console.WriteLine(users[minIndex].GetBalance());
 
             sum = 0;
-            foreach(User useris in users)
+            foreach (User useris in users)
             {
                 sum += useris.GetBalance();
             }
-            Console.WriteLine(sum);
+
+            Console.WriteLine("Total: {0}", sum);
+            Console.WriteLine("Max: {0}", users[maxIndex].GetBalance());
+            Console.WriteLine("Min: {0}", users[minIndex].GetBalance());
 
         }
     }
