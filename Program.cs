@@ -6,6 +6,10 @@ using System.Security.Cryptography;
 using System.Linq;
 using hash_algorithm.Logic;
 using System.Threading.Tasks;
+using System.Text;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Dynamic;
 
 namespace simplified_blockchain_VU
 {
@@ -15,12 +19,23 @@ namespace simplified_blockchain_VU
         {
             DataGeneration gen = new DataGeneration();
             CustomHashAlgorithm hashGenerator = new CustomHashAlgorithm();
-
             Tuple<List<User>, List<Transaction>> data = gen.GenerateData(1000);
             List<User> users = data.Item1;
             List<Transaction> transactions = data.Item2;
-
             List<Block> blocks = new List<Block>();
+
+            // merkle hash implementation demo
+            const string blockchainApi = "https://blockchain.info/rawblock/000000000021a5a985c8b3e1abd2c4e36e1e0b85170426ffa89f28088add6520";
+            dynamic blockData = FetchBlockData(blockchainApi);
+            List<string> transactionHashes = new List<string>();
+
+            foreach (dynamic transaction in blockData.tx)
+            {
+                transactionHashes.Add(SwapAndReverse(transaction.hash));
+            }
+
+            string obtainedMarkle = SwapAndReverse(BuildMerkle(transactionHashes)).ToLower();
+            Console.WriteLine(obtainedMarkle == blockData.mrkl_root ? "Hash'as atitiko" : "Hash'as neatitiko");
 
             double max = 0;
             double min = Int32.MaxValue;
@@ -61,7 +76,7 @@ namespace simplified_blockchain_VU
                 for(int i = 0; i < 4; i++)
                 {
                     string prevHash;
-                    if (blocks.Count == 0) prevHash = "0";
+                    if (blocks.Count == 0) prevHash = "0000000000000000000000000000000000000000000000000000000000000000";
                     else prevHash = blocks[^1].Hash;
 
                     int getTransactions;
@@ -84,7 +99,6 @@ namespace simplified_blockchain_VU
                             state.Break();
                             break;
                         }
-                            
                 });
 
                 if(newBlock.Mined)
@@ -141,12 +155,13 @@ namespace simplified_blockchain_VU
                     blocks.Add(newBlock);
                     Console.WriteLine(
                     "\nHash: {0}" +
-                    "\nTimeStamp: {1}" +
-                    "\nVersion: {2}" +
-                    "\nDifficulty rating: {3}" +
-                    "\nNonce: {4}" +
-                    "\nHeight: {5}\n",
-                    newBlock.Hash, newBlock.TimeStamp, newBlock.Version, newBlock.Difficulty, newBlock.Nonce, blocks.Count);
+                    "\nPrevious hash: {1}" +
+                    "\nTimeStamp: {2}" +
+                    "\nVersion: {3}" +
+                    "\nDifficulty rating: {4}" +
+                    "\nNonce: {5}" +
+                    "\nHeight: {6}\n",
+                    newBlock.Hash, newBlock.PrevHash, newBlock.TimeStamp, newBlock.Version, newBlock.Difficulty, newBlock.Nonce, blocks.Count);
                     Console.WriteLine("Total transactions: {0}\n", ctr);
                 }
             }
@@ -180,6 +195,86 @@ namespace simplified_blockchain_VU
             Console.WriteLine("Max: {0}", users[maxIndex].GetBalance());
             Console.WriteLine("Min: {0}", users[minIndex].GetBalance());
 
+        }
+        private static string BuildMerkle(List<string> transacHashes)
+        {
+            if (transacHashes == null || !transacHashes.Any())
+
+                return string.Empty;
+
+            if (transacHashes.Count() == 1)
+            {
+                return transacHashes.First();
+            }
+
+            if (transacHashes.Count() % 2 > 0)
+            {
+                transacHashes.Add(transacHashes.Last());
+            }
+
+            List<string> merkleHashes = new List<string>();
+
+            for (int i = 0; i < transacHashes.Count(); i += 2)
+            {
+                string leafPair = string.Concat(transacHashes[i], transacHashes[i + 1]);
+                merkleHashes.Add(Hash(Hash(leafPair)));
+            }
+            return BuildMerkle(merkleHashes);
+        }
+
+        private static string Hash(string data)
+        {
+            using SHA256 sha256 = SHA256.Create();
+            return ComputeHash(sha256, HexToByteArray(data));
+
+        }
+
+        private static string ComputeHash(HashAlgorithm hashAlgorithm, byte[] input)
+        {
+            byte[] data = hashAlgorithm.ComputeHash(input);
+            return ByteArrayToHex(data);
+        }
+
+        private static string ByteArrayToHex(byte[] bytes)
+        {
+            return BitConverter.ToString(bytes).Replace("-", "");
+        }
+
+        private static byte[] HexToByteArray(string hex)
+        {
+            return Enumerable.Range(0, hex.Length)
+                .Where(x => x % 2 == 0)
+                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                .ToArray();
+        }
+
+        private static string SwapAndReverse(string input)
+        {
+            string newString = string.Empty; ;
+            for (int i = 0; i < input.Count(); i += 2)
+            {
+                newString += string.Concat(input[i + 1], input[i]);
+            }
+            return ReverseString(newString);
+        }
+
+        private static string ReverseString(string original)
+        {
+            return new string(original.Reverse().ToArray());
+        }
+
+        private static dynamic FetchBlockData(string path)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                HttpResponseMessage response = client.GetAsync(path).Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    return JsonConvert.DeserializeObject<ExpandoObject>(json);
+                }
+            }
+            return null;
         }
     }
 }

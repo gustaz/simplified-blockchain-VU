@@ -38,37 +38,31 @@ namespace simplified_blockchain_VU.Objects
                 transactionHashes.Add(_hashAlgorithm.ToHash(transaction.Id));
             }
 
-            MerkleHash = BuildMerkleRoot(transactionHashes);
+            MerkleHash = BuildMerkle(transactionHashes);
 
-            Hash = _hashAlgorithm.ToHash(_hashAlgorithm.ToHash(PrevHash + timeStamp + version + MerkleHash) + Nonce);
+            Hash = _hashAlgorithm.ToHash(_hashAlgorithm.ToHash(PrevHash + timeStamp + MerkleHash) + Nonce);
         }
 
-        private string BuildMerkleRoot(List<string> merkelLeaves)
+        private string BuildMerkle(IList<string> hashes)
         {
-            if (merkelLeaves == null || !merkelLeaves.Any())
-
+            if (hashes == null || !hashes.Any())
                 return string.Empty;
 
-            if (merkelLeaves.Count == 1)
-            {
-                return merkelLeaves.First();
-            }
+            if (hashes.Count == 1)
+                return hashes.First();
 
-            if (merkelLeaves.Count % 2 > 0)
-            {
-                merkelLeaves.Add(merkelLeaves.Last());
-            }
+            if (hashes.Count % 2 > 0)
+                hashes.Add(hashes.Last());
 
-            var merkleBranches = new List<string>();
+            List<string> merkle = new List<string>();
 
-            for (int i = 0; i < merkelLeaves.Count; i += 2)
+            for (int i = 0; i < hashes.Count; i += 2)
             {
-                var leafPair = string.Concat(merkelLeaves[i], merkelLeaves[i + 1]);
-                merkleBranches.Add(_hashAlgorithm.ToHash(_hashAlgorithm.ToHash(leafPair)));
+                string leafPair = string.Concat(hashes[i], hashes[i + 1]);
+                merkle.Add(_hashAlgorithm.ToHash(_hashAlgorithm.ToHash(leafPair)));
             }
-            return BuildMerkleRoot(merkleBranches);
+            return BuildMerkle(merkle);
         }
-
 
         public void Mine()
         {
