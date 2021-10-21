@@ -1,7 +1,9 @@
 ﻿using hash_algorithm.Logic;
+using simplified_blockchain_VU.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Serialization;
@@ -12,14 +14,19 @@ namespace simplified_blockchain_VU.RandomGen
     {
         public string Name { get; set; }
         public string PublicKey { get; set; }
-        public double Balance { get; set; }
+        public List<double> UTXO { get; set; }
 
         public User() { }
-        public User(string name, string publicKey, double balance)
+        public User(string name, string publicKey, List<double> utxo)
         {
             Name = name;
             PublicKey = publicKey;
-            Balance = balance;
+            UTXO = utxo;
+        }
+
+        public double GetBalance()
+        {
+            return UTXO.Sum();
         }
     }
 }

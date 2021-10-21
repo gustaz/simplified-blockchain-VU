@@ -19,20 +19,28 @@ namespace simplified_blockchain_VU.RandomGen
         public Tuple<List<User>, List<Transaction>> GenerateData(int no)
         {
             List<User> users = new List<User>();
+            List<Transaction> transactions = new List<Transaction>();
+
             for (int i = 0; i < no; i++)
             {
-                User user = new User(RandomString(RandomNumber(32)), _hashAlgorithm.ToHash(RandomString(512)), RandomNumber(100, 1000000));
+                List<double> UTXOs = new List<double>();
+                for (int j = 0; j < RandomNumber(10) + 1; j++)
+                    UTXOs.Add(Math.Round(RandomFloat(10000), 2));
+
+                User user = new User(RandomString(RandomNumber(32)), _hashAlgorithm.ToHash(RandomString(512)), UTXOs);
                 users.Add(user);
             }
 
-            List<Transaction> transactions = new List<Transaction>();
-            for(int i = 0; i < no * 10; i++)
+            for (int i = 0; i < no * 100; i++)
             {
                 string from = users[RandomNumber(no)].PublicKey;
                 string to = users[RandomNumber(no)].PublicKey;
-                double value = RandomFloat(1000);
-                string id = _hashAlgorithm.ToHash(from + to + value);
-                Transaction transaction = new Transaction(from, to, value);
+
+                List<double> UTXOs = new List<double>();
+                for (int j = 0; j < RandomNumber(10) + 1; j++)
+                    UTXOs.Add(Math.Round(RandomFloat(10000), 2));
+
+                Transaction transaction = new Transaction(from, to, UTXOs);
                 transactions.Add(transaction);
             }
 

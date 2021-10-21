@@ -12,12 +12,12 @@ namespace simplified_blockchain_VU.Objects
     {
         private readonly CustomHashAlgorithm _hashAlgorithm = new CustomHashAlgorithm();
 
-        public string Hash { get; set; }
+        public string Hash { get; }
         public string PrevHash { get; set; }
         public DateTime TimeStamp { get; set; }
         public string Version { get; set; }
-        public string MerkleHash { get; set; }
-        public int Nonce { get; set; } = 0;
+        public string MerkleHash { get; }
+        public int Nonce { get; set;  } = 0;
         public int Difficulty { get; set; }
         public bool Mined { get; set; } = false;
         public bool Transacted { get; set; } = false;
@@ -49,19 +49,19 @@ namespace simplified_blockchain_VU.Objects
 
                 return string.Empty;
 
-            if (merkelLeaves.Count() == 1)
+            if (merkelLeaves.Count == 1)
             {
                 return merkelLeaves.First();
             }
 
-            if (merkelLeaves.Count() % 2 > 0)
+            if (merkelLeaves.Count % 2 > 0)
             {
                 merkelLeaves.Add(merkelLeaves.Last());
             }
 
             var merkleBranches = new List<string>();
 
-            for (int i = 0; i < merkelLeaves.Count(); i += 2)
+            for (int i = 0; i < merkelLeaves.Count; i += 2)
             {
                 var leafPair = string.Concat(merkelLeaves[i], merkelLeaves[i + 1]);
                 merkleBranches.Add(_hashAlgorithm.ToHash(_hashAlgorithm.ToHash(leafPair)));

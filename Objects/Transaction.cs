@@ -23,5 +23,10 @@ namespace simplified_blockchain_VU.Objects
             UTXO = utxo;
             Id = _hashAlgorithm.ToHash(from + to + utxo.Sum());
         }
+
+        public int GetClosestIndex(double toCompare)
+        {
+            return UTXO.IndexOf(UTXO.Aggregate((x, y) => Math.Abs(x - toCompare) < Math.Abs(y - toCompare) ? x : y));
+        }
     }
 }
